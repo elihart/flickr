@@ -72,25 +72,7 @@ public class GridAdapter extends BaseAdapter {
 		holder.text.setText(photo.getTitle());
 		String url = photo.getUrl(FlickrSize.SMALL);
 
-		ImageLoader.getInstance().displayImage(url, holder.image, null,
-				new SimpleImageLoadingListener() {
-					@Override
-					public void onLoadingStarted(String imageUri, View view) {
-						holder.image.setImageDrawable(null);
-					}
-
-					@Override
-					public void onLoadingFailed(String imageUri, View view,
-							FailReason failReason) {
-						holder.image.setImageDrawable(null);
-					}
-
-					@Override
-					public void onLoadingComplete(String imageUri, View view,
-							Bitmap loadedImage) {
-						
-					}
-				});
+		ImageLoader.getInstance().displayImage(url, holder.image);
 
 		return view;
 	}

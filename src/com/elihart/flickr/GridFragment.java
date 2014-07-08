@@ -38,6 +38,10 @@ public class GridFragment extends Fragment implements OnItemClickListener {
 		View view = inflater.inflate(R.layout.fragment_grid, container, false);
 
 		mGrid = (GridView) view.findViewById(R.id.grid);
+		/*
+		 * Since we're retaining the fragment we don't always have to create the
+		 * adapter.
+		 */
 		if (mAdapter == null) {
 			mAdapter = new GridAdapter(mActivity);
 		}
@@ -45,8 +49,6 @@ public class GridFragment extends Fragment implements OnItemClickListener {
 		mGrid.setOnItemClickListener(this);
 		return view;
 	}
-
-	
 
 	/**
 	 * Show the given photo list in the grid.
@@ -61,6 +63,7 @@ public class GridFragment extends Fragment implements OnItemClickListener {
 	@Override
 	public void onItemClick(AdapterView<?> arg0, View view, int position,
 			long id) {
+		// alert the activity that a photo was clicked
 		FlickrPhoto photo = mPhotos.get(position);
 		mActivity.photoClicked(photo);
 	}

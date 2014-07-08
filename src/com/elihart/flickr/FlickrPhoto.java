@@ -4,11 +4,12 @@ public class FlickrPhoto {
 	private String id;
 	private String owner;
 	private String ownername;
-	//private String description; // Is a json object with _content string
+	// private String description; // Is a json object with _content string
 	private String title;
 	private String secret;
 	private String server;
 	private String farm;
+	// The json info contains urls for different sizes of the image.
 	/** Original size. */
 	private String url_o;
 	/** Medium size. */
@@ -16,25 +17,8 @@ public class FlickrPhoto {
 	/** Small size. */
 	private String url_n;
 
-	private static final String IMAGE_URL = "https://farm%s.staticflickr.com/%s/%s_%s_%s.jpg";
-
 	public enum FlickrSize {
-		SMALL("n"), ORIGINAL("o");
-
-		/** The letter suffix to attach to the url to get this size. */
-		private String suffix;
-
-		private FlickrSize(String suffix) {
-			this.suffix = suffix;
-		}
-
-		public String getSuffix() {
-			return suffix;
-		}
-	}
-
-	public String getId() {
-		return id;
+		SMALL(), ORIGINAL();
 	}
 
 	/**
@@ -43,8 +27,6 @@ public class FlickrPhoto {
 	 * @return
 	 */
 	public String getUrl(FlickrSize size) {
-		// return String.format(IMAGE_URL, farm, server, id, secret,
-		// size.getSuffix());
 		switch (size) {
 		case ORIGINAL:
 			// original size is not always available. Fallback to medium.
@@ -67,9 +49,5 @@ public class FlickrPhoto {
 	public String getOwnerName() {
 		return ownername;
 	}
-
-//	public String getDescription() {
-//		return description;
-//	}
 
 }

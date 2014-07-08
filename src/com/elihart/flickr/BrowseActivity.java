@@ -100,16 +100,6 @@ public class BrowseActivity extends Activity {
 
 	}
 
-	@Override
-	public void onResume() {
-		super.onResume();
-
-		/* Start loading photos if it hasn't been done yet. */
-		if (mPhotos == null) {
-			loadInterestingPhotos();
-		}
-	}
-
 	/**
 	 * Do an async load of interesting flickr photos.
 	 * 
@@ -230,7 +220,8 @@ public class BrowseActivity extends Activity {
 	/**
 	 * Handle image loading success. Load image objects into image grid.
 	 * 
-	 * @param arg0
+	 * @param response 
+	 * @param search True if this was the response to a search query
 	 */
 	private void handleSuccess(FlickrResponse response, boolean search) {
 		mText.setVisibility(View.GONE);
