@@ -1,5 +1,6 @@
 package com.elihart.flickr;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -18,13 +19,13 @@ public class FlickrResponse {
 	 */
 	public List<FlickrPhoto> getPhotos() {
 		if (photos == null) {
-			return null;
+			return new ArrayList<FlickrPhoto>();
 		} else {
 			return photos.photo;
 		}
 	}
 
 	public class ResponsePhotos {
-		private List<FlickrPhoto> photo;
+		private List<FlickrPhoto> photo = new ArrayList<FlickrPhoto>();
 	}
 }

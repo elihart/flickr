@@ -1,5 +1,6 @@
 package com.elihart.flickr;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit.Callback;
@@ -77,6 +78,7 @@ public class BrowseActivity extends Activity {
 		else {
 			mFlickrClient = mRetainedFragment.client;
 			mPhotos = mRetainedFragment.photos;
+			mSearchResults = mRetainedFragment.searchResults;
 
 			/* Start loading photos if it hasn't been done yet. */
 			if (mPhotos == null) {
@@ -89,8 +91,23 @@ public class BrowseActivity extends Activity {
 			else if (mGridFragment.isHidden() && mDetailFragment.isHidden()) {
 				fm.beginTransaction().show(mGridFragment).commit();
 			}
+
+			// Set a search title if we are showing search results
+			if (mSearchResults != null) {
+				setTitle(getResources().getString(R.string.search_title));
+			}
 		}
 
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+
+		/* Start loading photos if it hasn't been done yet. */
+		if (mPhotos == null) {
+			loadInterestingPhotos();
+		}
 	}
 
 	/**
@@ -151,14 +168,12 @@ public class BrowseActivity extends Activity {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.browse, menu);
 
-		SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
 		mSearchView = (SearchView) menu.findItem(R.id.search).getActionView();
 		mSearchView.setOnQueryTextListener(new OnQueryTextListener() {
 
 			@Override
 			public boolean onQueryTextSubmit(String query) {
 				search(query);
-
 				return true;
 			}
 
@@ -178,6 +193,7 @@ public class BrowseActivity extends Activity {
 	 */
 	protected void search(String query) {
 		setProgressVisible(true);
+		setTitle(getResources().getString(R.string.search_title));
 
 		// hide fragments
 		FragmentManager fm = getFragmentManager();
@@ -189,7 +205,6 @@ public class BrowseActivity extends Activity {
 			@Override
 			public void success(FlickrResponse arg0, Response arg1) {
 				handleSuccess(arg0, true);
-				;
 			}
 
 			@Override
@@ -221,22 +236,22 @@ public class BrowseActivity extends Activity {
 		mText.setVisibility(View.GONE);
 		setProgressVisible(false);
 		List<FlickrPhoto> photos = response.getPhotos();
-
-		// check for empty results
-		if (photos == null || photos.isEmpty()) {
-			mText.setVisibility(View.VISIBLE);
-			mText.setText("No photo results");
-			return;
-		}
-
+		
 		// save photos
-		if (search) {
-			setTitle("Search Results");
+		if (search) {			
 			mSearchResults = photos;
 		} else {
 			mPhotos = photos;
 		}
 
+		// check for empty results
+		if (photos.isEmpty()) {
+			mText.setVisibility(View.VISIBLE);
+			mText.setText("No photo results");
+			return;
+		}
+
+		// show results
 		mGridFragment.showPhotos(photos);
 
 		/*
@@ -244,10 +259,11 @@ public class BrowseActivity extends Activity {
 		 * happens after the activity isn't visible anymore we can't commit the
 		 * transaction.
 		 */
-		FragmentManager fm = getFragmentManager();
-		fm.beginTransaction().show(mGridFragment).hide(mDetailFragment)
-				.commitAllowingStateLoss();
-
+		if (!isFinishing()) {
+			FragmentManager fm = getFragmentManager();
+			fm.beginTransaction().show(mGridFragment).hide(mDetailFragment)
+					.commitAllowingStateLoss();
+		}
 	}
 
 	@Override
@@ -256,6 +272,7 @@ public class BrowseActivity extends Activity {
 		/* Save instance state with fragment. */
 		mRetainedFragment.client = mFlickrClient;
 		mRetainedFragment.photos = mPhotos;
+		mRetainedFragment.searchResults = mSearchResults;
 	}
 
 	/**
@@ -265,6 +282,7 @@ public class BrowseActivity extends Activity {
 
 		public FlickrClient client;
 		public List<FlickrPhoto> photos;
+		public List<FlickrPhoto> searchResults;
 
 		@Override
 		public void onCreate(Bundle savedInstanceState) {
@@ -298,7 +316,12 @@ public class BrowseActivity extends Activity {
 			mSearchResults = null;
 			if (mPhotos != null) {
 				setTitle(getResources().getString(R.string.app_name));
+				mText.setVisibility(View.GONE);
 				mGridFragment.showPhotos(mPhotos);
+				if (mGridFragment.isHidden() && mDetailFragment.isHidden()) {
+					getFragmentManager().beginTransaction().show(mGridFragment)
+							.commit();
+				}
 			} else {
 				loadInterestingPhotos();
 			}
