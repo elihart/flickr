@@ -6,52 +6,68 @@ import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
 import android.app.Activity;
-import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 public class BrowseActivity extends Activity {
 	/** Progress bar for loading initial image list. */
 	private ProgressBar mProgress;
+	/** Text for showing errors. */
+	private TextView mText;
 	private FlickrClient mFlickrClient;
+	/** The photos from the query. */
+	private List<FlickrPhoto> mPhotos;
 
 	@Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_browse);
-        
-        // show progress while initializing app
-        mProgress = (ProgressBar) findViewById(R.id.progress);
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_browse);
 
-        if (savedInstanceState == null) {
-            getFragmentManager().beginTransaction()
-                    .add(R.id.container, new PlaceholderFragment())
-                    .commit();
-        }
-        
-        mFlickrClient = new FlickrClient();
-        
-        mFlickrClient.getInterestingPhotos(new Callback<FlickrResponse>() {
-			
+		// show progress while initializing app
+		mProgress = (ProgressBar) findViewById(R.id.progress);
+		mText = (TextView) findViewById(R.id.text);
+		mText.setVisibility(View.GONE);
+
+		// if (savedInstanceState == null) {
+		// getFragmentManager().beginTransaction()
+		// .add(R.id.container, new PlaceholderFragment())
+		// .commit();
+		// }
+
+		mFlickrClient = new FlickrClient();
+
+		mFlickrClient.getInterestingPhotos(new Callback<FlickrResponse>() {
+
 			@Override
 			public void success(FlickrResponse arg0, Response arg1) {
-				System.out.println(arg0.getPhotos().toString());		
+				handleSuccess(arg0);
 			}
-			
+
 			@Override
 			public void failure(RetrofitError arg0) {
-				System.out.println(arg0.toString());
-				
+				handleFailure(arg0);
 			}
 		});
-        
-        
-    }
+
+	}
+
+	/**
+	 * Handle image loading failure.
+	 * 
+	 * @param arg0
+	 */
+	private void handleFailure(RetrofitError arg0) {
+		mProgress.setVisibility(View.GONE);
+		System.out.println(arg0.toString());
+		mText.setText("Error loading image list");
+		mText.setVisibility(View.VISIBLE);
+	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -74,20 +90,29 @@ public class BrowseActivity extends Activity {
 	}
 
 	/**
-	 * A placeholder fragment containing a simple view.
+	 * Handle image loading success. Load image objects into image grid.
+	 * 
+	 * @param arg0
 	 */
-	public static class PlaceholderFragment extends Fragment {
+	private void handleSuccess(FlickrResponse response) {
+		mText.setVisibility(View.GONE);
+		mProgress.setVisibility(View.GONE);
+		mPhotos = response.getPhotos();
 
-		public PlaceholderFragment() {
-		}
+		GridFragment frag = new GridFragment();
 
-		@Override
-		public View onCreateView(LayoutInflater inflater, ViewGroup container,
-				Bundle savedInstanceState) {
-			View rootView = inflater.inflate(R.layout.fragment_browse,
-					container, false);
-			return rootView;
-		}
+		FragmentManager fm = getFragmentManager();
+		FragmentTransaction ft = fm.beginTransaction();
+		ft.add(R.id.container, frag);
+		ft.commitAllowingStateLoss();
+	}
+
+	/** Get the flickr photos we are browsing.
+	 * 
+	 * @return
+	 */
+	public List<FlickrPhoto> getPhotos() {
+		return mPhotos;
 	}
 
 }
