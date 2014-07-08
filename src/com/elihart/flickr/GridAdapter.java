@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.elihart.flickr.FlickrPhoto.FlickrSize;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -62,12 +63,14 @@ public class GridAdapter extends BaseAdapter {
 			holder = new ViewHolder();
 			holder.image = (ImageView) view.findViewById(R.id.image);
 			holder.progress = (ProgressBar) view.findViewById(R.id.progress);
+			holder.text = (TextView) view.findViewById(R.id.text);
 			view.setTag(holder);
 		} else {
 			holder = (ViewHolder) view.getTag();
 		}
 
 		FlickrPhoto photo = mPhotos.get(position);
+		holder.text.setText(photo.getTitle());
 		String url = photo.getUrl(FlickrSize.SMALL);
 
 		ImageLoader.getInstance().displayImage(url, holder.image, null,
@@ -106,5 +109,6 @@ public class GridAdapter extends BaseAdapter {
 	private class ViewHolder {
 		public ImageView image;
 		public ProgressBar progress;
+		public TextView text;
 	}
 }
