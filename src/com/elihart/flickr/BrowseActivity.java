@@ -35,6 +35,8 @@ public class BrowseActivity extends Activity {
 	private List<FlickrPhoto> mPhotos;
 	/** The fragment to show the grid of photos. */
 	private GridFragment mGridFragment;
+	/** The fragment to show the enlarged view of a photoo */
+	private DetailFragment mDetailFragment;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -42,11 +44,13 @@ public class BrowseActivity extends Activity {
 		setContentView(R.layout.activity_browse);
 
 		// show progress while initializing app
-		mProgress = (ProgressBar) findViewById(R.id.progress);
+		mProgress = (ProgressBar) findViewById(R.id.activity_progress);
 		mText = (TextView) findViewById(R.id.text);
 
 		FragmentManager fm = getFragmentManager();
 		mGridFragment = (GridFragment) fm.findFragmentById(R.id.grid_fragment);
+		mDetailFragment = (DetailFragment) fm
+				.findFragmentById(R.id.detail_fragment);
 
 		// find the retained fragment on activity restart
 		mRetainedFragment = (RetainedFragment) fm
@@ -60,6 +64,7 @@ public class BrowseActivity extends Activity {
 					.commit();
 
 			mFlickrClient = new FlickrClient();
+
 			loadInterestingPhotos();
 		}
 		// restore previous state
@@ -67,8 +72,16 @@ public class BrowseActivity extends Activity {
 			mFlickrClient = mRetainedFragment.client;
 			mPhotos = mRetainedFragment.photos;
 
+			/* Start loading photos if it hasn't been done yet. */
 			if (mPhotos == null) {
 				loadInterestingPhotos();
+			}
+			/*
+			 * If we already have the photos then we are resuming from a config
+			 * change. Make sure a fragment is being shown.
+			 */
+			else if (mGridFragment.isHidden() && mDetailFragment.isHidden()) {
+				fm.beginTransaction().show(mGridFragment).commit();
 			}
 		}
 
@@ -79,6 +92,11 @@ public class BrowseActivity extends Activity {
 	 * 
 	 */
 	private void loadInterestingPhotos() {
+		// hide fragments
+		FragmentManager fm = getFragmentManager();
+		fm.beginTransaction().hide(mDetailFragment).hide(mGridFragment)
+				.commit();
+
 		mText.setVisibility(View.GONE);
 		mProgress.setVisibility(View.VISIBLE);
 
@@ -140,6 +158,14 @@ public class BrowseActivity extends Activity {
 		mPhotos = response.getPhotos();
 
 		mGridFragment.showPhotos(mPhotos);
+
+		if (!isChangingConfigurations()) {
+			FragmentManager fm = getFragmentManager();
+			fm.beginTransaction()
+
+			.show(mGridFragment).hide(mDetailFragment).commit();
+		}
+
 	}
 
 	@Override
@@ -164,6 +190,20 @@ public class BrowseActivity extends Activity {
 			// retain this fragment
 			setRetainInstance(true);
 		}
+	}
+
+	/**
+	 * Called when a photo in the grid is clicked.
+	 * 
+	 * @param photo
+	 */
+	public void photoClicked(FlickrPhoto photo) {
+		mDetailFragment.showPhoto(photo);
+
+		FragmentManager fm = getFragmentManager();
+		fm.beginTransaction().hide(mGridFragment).show(mDetailFragment)
+				.addToBackStack("photo detail").commit();
+
 	}
 
 }

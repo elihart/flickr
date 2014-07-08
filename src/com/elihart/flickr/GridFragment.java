@@ -8,9 +8,11 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
 
-public class GridFragment extends Fragment {
+public class GridFragment extends Fragment implements OnItemClickListener {
 	private GridView mGrid;
 	private List<FlickrPhoto> mPhotos;
 	private GridAdapter mAdapter;
@@ -37,9 +39,10 @@ public class GridFragment extends Fragment {
 
 		mGrid = (GridView) view.findViewById(R.id.grid);
 		if(mAdapter == null){
-			mAdapter = new GridAdapter(mActivity);			
+			mAdapter = new GridAdapter(mActivity);	
 		}
 		mGrid.setAdapter(mAdapter);
+		mGrid.setOnItemClickListener(this);
 		return view;
 	}
 
@@ -49,7 +52,14 @@ public class GridFragment extends Fragment {
 	 * @param photos
 	 */
 	public void showPhotos(List<FlickrPhoto> photos) {
+		mPhotos = photos;
 		mAdapter.setPhotos(photos);
+	}
+
+	@Override
+	public void onItemClick(AdapterView<?> arg0, View view, int position, long id) {
+		FlickrPhoto photo = mPhotos.get(position);
+		mActivity.photoClicked(photo);	
 	}
 
 }

@@ -10,6 +10,6 @@ public interface FlickrApi {
 	@GET("/")
 	void images(@Query("method") String method,
 			@Query("api_key") String apiKey, @Query("format") String format,
-			@Query("nojsoncallback") int jsonCallback, Callback<FlickrResponse> cb);
+			@Query("nojsoncallback") int jsonCallback, @Query("extras") String extras, Callback<FlickrResponse> cb);
 
 }
