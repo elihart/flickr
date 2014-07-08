@@ -97,8 +97,7 @@ public class BrowseActivity extends Activity {
 		fm.beginTransaction().hide(mDetailFragment).hide(mGridFragment)
 				.commit();
 
-		mText.setVisibility(View.GONE);
-		mProgress.setVisibility(View.VISIBLE);
+		setProgressVisible(true);
 
 		// Start async query to get photo list
 		mFlickrClient.getInterestingPhotos(new Callback<FlickrResponse>() {
@@ -116,12 +115,26 @@ public class BrowseActivity extends Activity {
 	}
 
 	/**
+	 * Set the visibility status of the progress bar.
+	 * 
+	 * @param visible
+	 *            True to show progress, false otherwise
+	 */
+	private void setProgressVisible(boolean visible) {
+		if (visible) {
+			mProgress.setVisibility(View.VISIBLE);
+		} else {
+			mProgress.setVisibility(View.GONE);
+		}
+	}
+
+	/**
 	 * Handle image loading failure.
 	 * 
 	 * @param arg0
 	 */
 	private void handleFailure(RetrofitError arg0) {
-		mProgress.setVisibility(View.GONE);
+		setProgressVisible(false);
 		System.out.println(arg0.toString());
 		mText.setText("Error loading image list");
 		mText.setVisibility(View.VISIBLE);
@@ -154,17 +167,19 @@ public class BrowseActivity extends Activity {
 	 */
 	private void handleSuccess(FlickrResponse response) {
 		mText.setVisibility(View.GONE);
-		mProgress.setVisibility(View.GONE);
+		setProgressVisible(false);
 		mPhotos = response.getPhotos();
 
 		mGridFragment.showPhotos(mPhotos);
 
-		if (!isChangingConfigurations()) {
-			FragmentManager fm = getFragmentManager();
-			fm.beginTransaction()
-
-			.show(mGridFragment).hide(mDetailFragment).commit();
-		}
+		/*
+		 * Make sure the grid fragment is showing. However, if the callback
+		 * happens after the activity isn't visible anymore we can't commit the
+		 * transaction.
+		 */
+		FragmentManager fm = getFragmentManager();
+		fm.beginTransaction().show(mGridFragment).hide(mDetailFragment)
+				.commitAllowingStateLoss();
 
 	}
 
@@ -201,7 +216,7 @@ public class BrowseActivity extends Activity {
 		mDetailFragment.showPhoto(photo);
 
 		FragmentManager fm = getFragmentManager();
-		fm.beginTransaction().hide(mGridFragment).show(mDetailFragment)
+		fm.beginTransaction().show(mDetailFragment)
 				.addToBackStack("photo detail").commit();
 
 	}

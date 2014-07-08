@@ -3,6 +3,8 @@ package com.elihart.flickr;
 public class FlickrPhoto {
 	private String id;
 	private String owner;
+	private String ownername;
+	//private String description; // Is a json object with _content string
 	private String title;
 	private String secret;
 	private String server;
@@ -57,5 +59,17 @@ public class FlickrPhoto {
 			return url_n;
 		}
 	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public String getOwnerName() {
+		return ownername;
+	}
+
+//	public String getDescription() {
+//		return description;
+//	}
 
 }

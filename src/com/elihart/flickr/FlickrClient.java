@@ -18,7 +18,7 @@ public class FlickrClient {
 	}
 
 	public void getInterestingPhotos(Callback<FlickrResponse> cb) {
-		String extras = "url_o, url_c, url_n";
+		String extras = "url_o, url_c, url_n, owner_name, description";
 		mApi.images("flickr.interestingness.getList", API_KEY, JSON_FORMAT,
 				NO_JSON_CALLBACK, extras, cb);
 	}

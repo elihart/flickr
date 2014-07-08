@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.elihart.flickr.FlickrPhoto.FlickrSize;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -24,6 +25,8 @@ public class DetailFragment extends Fragment {
 	private FlickrPhoto mPhoto;
 	/** Progress to show while image loads. */
 	private ProgressBar mProgress;
+	private TextView mTitle;
+	private TextView mOwner;
 
 	@Override
 	public void onAttach(Activity activity) {
@@ -46,6 +49,8 @@ public class DetailFragment extends Fragment {
 
 		mImageView = (ImageView) view.findViewById(R.id.image);
 		mProgress = (ProgressBar) view.findViewById(R.id.progress);
+		mTitle = (TextView) view.findViewById(R.id.title);
+		mOwner = (TextView) view.findViewById(R.id.owner);
 		if(mPhoto != null){
 			showPhoto(mPhoto);
 		}
@@ -59,6 +64,11 @@ public class DetailFragment extends Fragment {
 	 */
 	public void showPhoto(FlickrPhoto photo) {
 		mPhoto = photo;
+		// set photo details
+		mTitle.setText(mPhoto.getTitle());
+		mOwner.setText(mPhoto.getOwnerName());
+		
+		// load image from url
 		String url = mPhoto.getUrl(FlickrSize.ORIGINAL);
 		ImageLoader.getInstance().displayImage(url, mImageView, null,
 				new SimpleImageLoadingListener() {
