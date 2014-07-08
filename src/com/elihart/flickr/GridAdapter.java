@@ -1,5 +1,6 @@
 package com.elihart.flickr;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import android.content.Context;
@@ -21,10 +22,20 @@ public class GridAdapter extends BaseAdapter {
 	private List<FlickrPhoto> mPhotos;
 	private LayoutInflater mInflater;
 
-	public GridAdapter(Context context, List<FlickrPhoto> photos) {
-		mPhotos = photos;
+	public GridAdapter(Context context) {
+		mPhotos = new ArrayList<FlickrPhoto>();
 		mInflater = (LayoutInflater) context
 				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+	}
+
+	/**
+	 * Update the set of photos to display.
+	 * 
+	 * @param photos
+	 */
+	public void setPhotos(List<FlickrPhoto> photos) {
+		mPhotos = photos;
+		notifyDataSetChanged();
 	}
 
 	@Override

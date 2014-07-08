@@ -6,6 +6,7 @@ import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
 import android.app.Activity;
+import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
@@ -16,13 +17,24 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 public class BrowseActivity extends Activity {
+	/** Use this fragment to retain state on config changes */
+	private RetainedFragment mRetainedFragment;
+	/**
+	 * Tag to use when adding the retained fragment to the fragment manager
+	 */
+	private static final String RETAINED_FRAGMENT_TAG = "retainedFragment";
+
 	/** Progress bar for loading initial image list. */
 	private ProgressBar mProgress;
 	/** Text for showing errors. */
 	private TextView mText;
+	/** Client for making flickr api queries. */
 	private FlickrClient mFlickrClient;
+
 	/** The photos from the query. */
 	private List<FlickrPhoto> mPhotos;
+	/** The fragment to show the grid of photos. */
+	private GridFragment mGridFragment;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -32,16 +44,45 @@ public class BrowseActivity extends Activity {
 		// show progress while initializing app
 		mProgress = (ProgressBar) findViewById(R.id.progress);
 		mText = (TextView) findViewById(R.id.text);
+
+		FragmentManager fm = getFragmentManager();
+		mGridFragment = (GridFragment) fm.findFragmentById(R.id.grid_fragment);
+
+		// find the retained fragment on activity restart
+		mRetainedFragment = (RetainedFragment) fm
+				.findFragmentByTag(RETAINED_FRAGMENT_TAG);
+
+		// create the fragment and data the first time
+		if (mRetainedFragment == null) {
+			// add the fragment
+			mRetainedFragment = new RetainedFragment();
+			fm.beginTransaction().add(mRetainedFragment, RETAINED_FRAGMENT_TAG)
+					.commit();
+
+			mFlickrClient = new FlickrClient();
+			loadInterestingPhotos();
+		}
+		// restore previous state
+		else {
+			mFlickrClient = mRetainedFragment.client;
+			mPhotos = mRetainedFragment.photos;
+
+			if (mPhotos == null) {
+				loadInterestingPhotos();
+			}
+		}
+
+	}
+
+	/**
+	 * Do an async load of interesting flickr photos.
+	 * 
+	 */
+	private void loadInterestingPhotos() {
 		mText.setVisibility(View.GONE);
+		mProgress.setVisibility(View.VISIBLE);
 
-		// if (savedInstanceState == null) {
-		// getFragmentManager().beginTransaction()
-		// .add(R.id.container, new PlaceholderFragment())
-		// .commit();
-		// }
-
-		mFlickrClient = new FlickrClient();
-
+		// Start async query to get photo list
 		mFlickrClient.getInterestingPhotos(new Callback<FlickrResponse>() {
 
 			@Override
@@ -54,7 +95,6 @@ public class BrowseActivity extends Activity {
 				handleFailure(arg0);
 			}
 		});
-
 	}
 
 	/**
@@ -99,20 +139,31 @@ public class BrowseActivity extends Activity {
 		mProgress.setVisibility(View.GONE);
 		mPhotos = response.getPhotos();
 
-		GridFragment frag = new GridFragment();
-
-		FragmentManager fm = getFragmentManager();
-		FragmentTransaction ft = fm.beginTransaction();
-		ft.add(R.id.container, frag);
-		ft.commitAllowingStateLoss();
+		mGridFragment.showPhotos(mPhotos);
 	}
 
-	/** Get the flickr photos we are browsing.
-	 * 
-	 * @return
+	@Override
+	public void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		/* Save instance state with fragment. */
+		mRetainedFragment.client = mFlickrClient;
+		mRetainedFragment.photos = mPhotos;
+	}
+
+	/**
+	 * Fragment used to save activity state on config change.
 	 */
-	public List<FlickrPhoto> getPhotos() {
-		return mPhotos;
+	public static class RetainedFragment extends Fragment {
+
+		public FlickrClient client;
+		public List<FlickrPhoto> photos;
+
+		@Override
+		public void onCreate(Bundle savedInstanceState) {
+			super.onCreate(savedInstanceState);
+			// retain this fragment
+			setRetainInstance(true);
+		}
 	}
 
 }

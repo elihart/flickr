@@ -15,11 +15,18 @@ public class GridFragment extends Fragment {
 	private List<FlickrPhoto> mPhotos;
 	private GridAdapter mAdapter;
 	private BrowseActivity mActivity;
-	
+
 	@Override
-	public void onAttach(Activity activity){
+	public void onAttach(Activity activity) {
 		super.onAttach(activity);
 		mActivity = (BrowseActivity) activity;
+	}
+
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		// retain this fragment
+		setRetainInstance(true);
 	}
 
 	@Override
@@ -27,19 +34,22 @@ public class GridFragment extends Fragment {
 			Bundle savedInstanceState) {
 		// Inflate the layout for this fragment
 		View view = inflater.inflate(R.layout.fragment_grid, container, false);
-		
+
 		mGrid = (GridView) view.findViewById(R.id.grid);
+		if(mAdapter == null){
+			mAdapter = new GridAdapter(mActivity);			
+		}
+		mGrid.setAdapter(mAdapter);
 		return view;
 	}
-	
-	@Override
-	public void onResume(){
-		super.onResume();
-		
-		/* Get the images from the activity and show them in the grid. */
-		mPhotos = mActivity.getPhotos();
-		mAdapter = new GridAdapter(mActivity, mPhotos);
-		mGrid.setAdapter(mAdapter);
+
+	/**
+	 * Show the given photo list in the grid.
+	 * 
+	 * @param photos
+	 */
+	public void showPhotos(List<FlickrPhoto> photos) {
+		mAdapter.setPhotos(photos);
 	}
 
 }
