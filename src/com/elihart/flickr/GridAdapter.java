@@ -62,7 +62,6 @@ public class GridAdapter extends BaseAdapter {
 			view = mInflater.inflate(R.layout.grid_image, parent, false);
 			holder = new ViewHolder();
 			holder.image = (ImageView) view.findViewById(R.id.image);
-			holder.progress = (ProgressBar) view.findViewById(R.id.progress);
 			holder.text = (TextView) view.findViewById(R.id.text);
 			view.setTag(holder);
 		} else {
@@ -77,29 +76,19 @@ public class GridAdapter extends BaseAdapter {
 				new SimpleImageLoadingListener() {
 					@Override
 					public void onLoadingStarted(String imageUri, View view) {
-						holder.progress.setProgress(0);
 						holder.image.setImageDrawable(null);
-						holder.progress.setVisibility(View.VISIBLE);
 					}
 
 					@Override
 					public void onLoadingFailed(String imageUri, View view,
 							FailReason failReason) {
 						holder.image.setImageDrawable(null);
-						holder.progress.setVisibility(View.GONE);
 					}
 
 					@Override
 					public void onLoadingComplete(String imageUri, View view,
 							Bitmap loadedImage) {
-						holder.progress.setVisibility(View.GONE);
-					}
-				}, new ImageLoadingProgressListener() {
-					@Override
-					public void onProgressUpdate(String imageUri, View view,
-							int current, int total) {
-						holder.progress.setProgress(Math.round(100.0f * current
-								/ total));
+						
 					}
 				});
 
@@ -108,7 +97,6 @@ public class GridAdapter extends BaseAdapter {
 
 	private class ViewHolder {
 		public ImageView image;
-		public ProgressBar progress;
 		public TextView text;
 	}
 }
