@@ -38,13 +38,15 @@ public class GridFragment extends Fragment implements OnItemClickListener {
 		View view = inflater.inflate(R.layout.fragment_grid, container, false);
 
 		mGrid = (GridView) view.findViewById(R.id.grid);
-		if(mAdapter == null){
-			mAdapter = new GridAdapter(mActivity);	
+		if (mAdapter == null) {
+			mAdapter = new GridAdapter(mActivity);
 		}
 		mGrid.setAdapter(mAdapter);
 		mGrid.setOnItemClickListener(this);
 		return view;
 	}
+
+	
 
 	/**
 	 * Show the given photo list in the grid.
@@ -57,9 +59,10 @@ public class GridFragment extends Fragment implements OnItemClickListener {
 	}
 
 	@Override
-	public void onItemClick(AdapterView<?> arg0, View view, int position, long id) {
+	public void onItemClick(AdapterView<?> arg0, View view, int position,
+			long id) {
 		FlickrPhoto photo = mPhotos.get(position);
-		mActivity.photoClicked(photo);	
+		mActivity.photoClicked(photo);
 	}
 
 }

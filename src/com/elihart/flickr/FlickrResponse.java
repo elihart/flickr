@@ -17,7 +17,11 @@ public class FlickrResponse {
 	 * @return
 	 */
 	public List<FlickrPhoto> getPhotos() {
-		return photos.photo;
+		if (photos == null) {
+			return null;
+		} else {
+			return photos.photo;
+		}
 	}
 
 	public class ResponsePhotos {

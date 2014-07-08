@@ -8,12 +8,15 @@ import retrofit.client.Response;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
-import android.app.FragmentTransaction;
+import android.app.SearchManager;
+import android.content.Context;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.SearchView;
+import android.widget.SearchView.OnQueryTextListener;
 import android.widget.TextView;
 
 public class BrowseActivity extends Activity {
@@ -31,12 +34,15 @@ public class BrowseActivity extends Activity {
 	/** Client for making flickr api queries. */
 	private FlickrClient mFlickrClient;
 
-	/** The photos from the query. */
+	/** The photos from the main query. */
 	private List<FlickrPhoto> mPhotos;
+	/** Photos from the most recent image search */
+	private List<FlickrPhoto> mSearchResults;
 	/** The fragment to show the grid of photos. */
 	private GridFragment mGridFragment;
 	/** The fragment to show the enlarged view of a photoo */
 	private DetailFragment mDetailFragment;
+	private SearchView mSearchView;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -104,7 +110,7 @@ public class BrowseActivity extends Activity {
 
 			@Override
 			public void success(FlickrResponse arg0, Response arg1) {
-				handleSuccess(arg0);
+				handleSuccess(arg0, false);
 			}
 
 			@Override
@@ -142,10 +148,56 @@ public class BrowseActivity extends Activity {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.browse, menu);
+
+		SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+		mSearchView = (SearchView) menu.findItem(R.id.search).getActionView();
+		mSearchView.setOnQueryTextListener(new OnQueryTextListener() {
+
+			@Override
+			public boolean onQueryTextSubmit(String query) {
+				search(query);
+
+				return true;
+			}
+
+			@Override
+			public boolean onQueryTextChange(String newText) {
+				return false;
+			}
+		});
+
 		return true;
+	}
+
+	/**
+	 * Run a photo search for a query string.
+	 * 
+	 * @param query
+	 */
+	protected void search(String query) {
+		setProgressVisible(true);
+
+		// hide fragments
+		FragmentManager fm = getFragmentManager();
+		fm.beginTransaction().hide(mDetailFragment).hide(mGridFragment)
+				.commit();
+
+		mFlickrClient.search(query, new Callback<FlickrResponse>() {
+
+			@Override
+			public void success(FlickrResponse arg0, Response arg1) {
+				handleSuccess(arg0, true);
+				;
+			}
+
+			@Override
+			public void failure(RetrofitError arg0) {
+				handleFailure(arg0);
+			}
+		});
+
 	}
 
 	@Override
@@ -154,7 +206,7 @@ public class BrowseActivity extends Activity {
 		// automatically handle clicks on the Home/Up button, so long
 		// as you specify a parent activity in AndroidManifest.xml.
 		int id = item.getItemId();
-		if (id == R.id.action_settings) {
+		if (id == R.id.search) {
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
@@ -165,12 +217,27 @@ public class BrowseActivity extends Activity {
 	 * 
 	 * @param arg0
 	 */
-	private void handleSuccess(FlickrResponse response) {
+	private void handleSuccess(FlickrResponse response, boolean search) {
 		mText.setVisibility(View.GONE);
 		setProgressVisible(false);
-		mPhotos = response.getPhotos();
+		List<FlickrPhoto> photos = response.getPhotos();
 
-		mGridFragment.showPhotos(mPhotos);
+		// check for empty results
+		if (photos == null || photos.isEmpty()) {
+			mText.setVisibility(View.VISIBLE);
+			mText.setText("No photo results");
+			return;
+		}
+
+		// save photos
+		if (search) {
+			setTitle("Search Results");
+			mSearchResults = photos;
+		} else {
+			mPhotos = photos;
+		}
+
+		mGridFragment.showPhotos(photos);
 
 		/*
 		 * Make sure the grid fragment is showing. However, if the callback
@@ -219,6 +286,25 @@ public class BrowseActivity extends Activity {
 		fm.beginTransaction().show(mDetailFragment)
 				.addToBackStack("photo detail").commit();
 
+	}
+
+	@Override
+	public void onBackPressed() {
+		/*
+		 * If we are showing search results then go back to showing the main
+		 * photo set.
+		 */
+		if (mSearchResults != null) {
+			mSearchResults = null;
+			if (mPhotos != null) {
+				setTitle(getResources().getString(R.string.app_name));
+				mGridFragment.showPhotos(mPhotos);
+			} else {
+				loadInterestingPhotos();
+			}
+		} else {
+			super.onBackPressed();
+		}
 	}
 
 }
